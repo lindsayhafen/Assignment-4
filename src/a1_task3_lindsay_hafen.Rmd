@@ -1,0 +1,63 @@
+---
+title: "a1_task3_lindsay_hafen.Rmd"
+author: "Lindsay Hafen"
+date: "10/10/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(janitor)
+```
+
+## 1. Read in Atlantic Salmon Imports data 
+
+- Here I attach tidyverse in initial code chunk
+- Read data using read function
+
+```{r}
+atl_salmon_imp_data <- read_csv("atl_salmon_imports.csv")
+```
+
+## 2. Change column titles to lower_snake_case
+
+- I attach janitor in the initial code chunk
+- I change the names using the clean_names function
+
+```{r}
+sal_clean <- atl_salmon_imp_data %>% 
+  clean_names()
+```
+
+## 3. Wrangle data
+
+- Here I will isolate variables: Salmon imports from Ireland, Denmark, and Iceland from 2000 - to 2018
+- Use dplyr::filter()
+- Is there a more concise way to filter each of these?
+
+```{r}
+sal_00to18 <- sal_clean %>% 
+  filter(country_name == "Ireland" | country_name == "Denmark"| country_name == "Iceland") %>% 
+  filter(import_year >= 2000) %>% 
+  filter(import_year <= 2018)
+```
+
+## 4. Create a graph with 3 lines to signify the 3 respective countries
+
+- Here I will create a graph with Ireland, Denmark and Iceland's salmon import by volume.
+- I will use ggplot and modify each line independently with aes(color = country_name) (Is there a way to do this and select seperate colors for each country?)
+- Why is aes(color = ) the argument used to change titles? Does it do something for colors?
+
+
+```{r}
+ggplot(data = sal_00to18, aes(x = import_year, y = salmon_volume, color = country_name)) +
+  geom_line()+
+  labs(title = "Estimated Volume of USA Salmon Imports (2000-2018) HAFEN")+
+  labs(x = "year") +
+  labs(y = "volume (10,000's of lbs)")+
+  labs(color = "country of origin")
+```
+
+
+

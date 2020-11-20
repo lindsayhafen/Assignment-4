@@ -1,0 +1,66 @@
+---
+title: "assignment1_task1"
+author: "Lindsay Hafen"
+date: "10/9/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## 1. Read in the Glacial Loss data
+
+- Attach the tidyverse using library(tidyverse)
+- Read the data in using read_csv
+- No need to clean this data? (It's already in all snake case)
+
+```{r}
+glacial_data <- read_csv("glacial_loss.csv")
+```
+
+## 2. Glacial data wrangling
+
+- dplyr::select() - Exclude columns (To select only year and cumulative sea level rise)
+- dplyer::filter() - Create subsets (To select years ranging from 1961-1990)
+
+```{r}
+glacial_rise <- glacial_data %>% 
+  select(year, cumulative_sea_level_rise) %>% 
+  filter(year < 1991, year > 1960)
+```
+
+## 3. Plotting and customizing glacial data
+
+- Sea level rise, and year on the axes
+- 1960 is included on the graph even though there is no point for 1960
+- Use ggplot function, don't forget aes(x =  , y =  )
+- Necessary to define point as "p"? Or just helpful for the examples pages online? Seems possible to graph without...
+
+```{r}
+p <- ggplot(data= glacial_rise, aes(x = year, y = cumulative_sea_level_rise)) +
+  geom_point()
+p + labs(title = "Sea level rise due to glacial loss 1961 - 1990 (HAFEN)") +
+  labs(x = "Year") + 
+  labs(y = "Annual rise in sea level (mm)")
+```
+
+
+## 4. Modifying colors, customizing graph
+
+- Is gradient a possibility with a point graph?
+- Changing background options to classic by defining the OG ggplot as "p" again, then adding functions to the variable "p" makes it tricky to add secondary or tertiary changes because they will graph as separate graphs. Don't need "p"?
+
+```{r}
+p <- ggplot(data= glacial_rise, aes(x = year, y = cumulative_sea_level_rise)) +
+  geom_point(color = "blue") + 
+  labs(title = "Sea level rise due to glacial loss 1961 - 1990 (HAFEN)") +
+  labs(x = "Year") + 
+  labs(y = "Annual rise in sea level (mm)") 
+p + theme_classic()
+```
+
+
+
+

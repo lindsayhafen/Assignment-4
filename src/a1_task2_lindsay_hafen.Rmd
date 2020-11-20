@@ -1,0 +1,67 @@
+---
+title: "a1_task2_lindsay_hafen.Rmd"
+author: "Lindsay Hafen"
+date: "10/10/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(janitor)
+```
+
+## 1. Read in St. Louis blood data
+
+- Attach tidyverse using library(tidyverse)
+- Read in data using read.csv
+
+```{r}
+stl_data <- read.csv("stl_lead.csv")
+```
+
+## 2. Clean St. Louis blood data
+
+- Attach janitor using library(janitor)
+- Clean data using clean_names() funtion
+
+```{r}
+stl_clean <- stl_data %>%  
+  clean_names()
+```
+
+## 3. Wrangling the "clean" St. Louis blood data
+
+- Using dplyr::
+- select() for the percentage of children whose blood lead levels >= 5 micrograms/dL for: total population and black populations
+- mutate() to create column: "Percent identifying as black"
+
+```{r}
+stl_2015 <- stl_clean %>% 
+  select(pct_elevated, total_pop, black) %>% 
+  mutate(perc_black = 100 * black / total_pop)
+```
+
+## 4. Create graph using new "% black population" variable against "% of children in each census tract with elevated blood lead levels"
+
+- Change the color and size of the points in the geom_point() function
+- Label the axes and title by adding labs()
+- Change the size of the title by adding theme(plot.title = element_text(size = "a number")) (Thank you Google!) (are there other/preferred ways to accomplish this?)
+- Change the theme of the graph using theme_"pick an option"
+
+```{r}
+ggplot(data = stl_2015, aes(x = perc_black, y = pct_elevated)) +
+  geom_point(color = "red", size = .5) + labs(title = "Elevated Blood-Lead Levels in the Young Black Population of St. Louis, MO in 2015 (HAFEN)") +
+  labs(x = "% of children identifying as black") +
+  labs(y = "% of children with blood-lead levels >5 mcg/dL")+
+  theme(plot.title = element_text(size=10)) + 
+  theme_classic() 
+```
+
+## 5. Graph description
+
+- This graph shows a general trend in which the percent of people in an area with high blood-lead levels increases as the percent of those people who identify as black increase. 
+
+
+
+

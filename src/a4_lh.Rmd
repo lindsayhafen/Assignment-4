@@ -1,0 +1,153 @@
+---
+title: "Bonanza Hares"
+author: "Lindsay Hafen"
+date: "11/15/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(lubridate)
+library(here)
+library(janitor)
+library(tidyverse)
+library(kableExtra)
+library(ggbeeswarm)
+library(broom)
+library(effsize)
+```
+
+## Introduction
+
+
+
+## Data and Analysis
+
+
+
+## Exploratory Findings
+### Annual juvenile hare trap counts
+
+```{r}
+# Read in the Data
+bonanza_hares <- read_csv(here("data", "bonanza_hares.csv"))
+
+# Lubridate for date to isolate year, filter for juvenile
+
+hares_juvenile <- bonanza_hares %>% 
+  mutate(date = mdy(date),
+         year = year(date)) %>% 
+  filter(age == "j")
+
+# Prep data for summary statistics using count()
+
+hares_juvenile_sum <- bonanza_hares %>% 
+  mutate(date = mdy(date),
+         year = year(date)) %>% 
+  filter(age == "j") %>% 
+  count(year)
+
+# Graph juveniles per year
+
+ggplot(hares_juvenile_sum, aes(x = year, y = n)) +
+  geom_col(fill = "darkturquoise") +
+  theme_linedraw() +
+  labs(x = "Year", y = "Number of individuals", title = "Juvenile snowshoe hare population in Bonanza Creek, Alaska (1998 - 2012)")+
+  theme(plot.title = element_text(size = 12))
+```
+
+- Missing data during years 2002 and 2009 is resultant from lacking age recordings. It is possible that juveniles were in fact recorded for these years, but it is not possible to say how many. I am leaving the zero counts in the graph to show proper chronology, but I want to be clear that the counts for those two years are very likely to be more than zero.
+
+```{r}
+# Make a table of summary statistics (this will be simple because the metric of sample size is not variable)
+
+hares_summary <- hares_juvenile_sum %>% 
+   summarize(average_counts = mean(n),
+             median_counts = median(n),
+             sample_size = sum(n))
+
+# Include a table of summary statistics using kableExtra package
+
+hares_summary %>% 
+  kbl() %>% 
+  kable_styling()
+```
+figure caption: Although zero counts were included in figure (1), they were excluded for the summary statistic table (figure (2)) because the zeros are not accurate counts, and would disporportionately influence the mean and median counts. 
+
+
+- The minimum number of counts is 2 and the maximum is 126.
+- There seems to be a fairly large difference between the median and mean counts, and it is possible that this is because the counts over time have a linear relationship.
+- A general trend that seems apparent on the graph shows a decrease in the number of recorded juveniles over time, though there are large fluctuations from year to year as well, so it is important to consider what may be causing these such as:
+- It is important to understand whether the data was recorded responsibly and consistently as there appear to be a number of differences as to what the researchers recorded from year to year. Some years have no record of age, some have no record of sex etc. It is important to know what their reasoning was behind these differences. 
+- In order to standardize the data moving forward, the counts should be correlated back to the relative number of traps set, and the number of days that data was collected over each year (in the event that the further analysis does not require anything more specific than year such as month, day, etc.).
+
+### Visualize juvenile hare weights by sex and site
+
+```{r}
+# Isolate columns of interest using select, filter age for juveniles, 
+
+hares_site <- bonanza_hares %>% 
+  select(sex, age, grid, weight) %>%  
+  filter(age == "j") %>% 
+  group_by(grid, sex)
+
+
+hares_sex_site_sum <- hares_site %>% 
+  summarise(mean_weight = mean(weight, na.rm = TRUE),
+            sd = sd(weight, na.rm = TRUE),
+            sample_size = (n()),
+            variance = var(weight, na.rm = TRUE),
+            standard_error = sd(weight, na.rm = TRUE)/sqrt(n()),
+            )
+  
+ggplot(hares_site, aes(x = grid, y = weight)) +
+  geom_beeswarm(aes(color = grid),
+                alpha = 0.33) +
+  facet_wrap(~sex) +
+  labs(title = "Weight and summary statistics for snowshoe hares by sex and site (1998-2012)", y = "weight (g)", x = "trap Site")+
+  geom_point(data = hares_sex_site_sum, 
+             aes(x = grid, y = mean_weight))
+```
+> This :  geom_errorbar(data = hares_sex_sum,
+                aes(x = grid,
+                    ymax = mean_weight + sd,
+                    ymin = mean_weight - sd, na.rm = TRUE))
+
+
+- Based on the beeswarm density, the most data was collected from the bonrip site. The average weights seem to be slightly higher in males than females as shown by the percent difference 
+
+### Juvenile weight comparison between males and females
+
+```{r, include = FALSE}
+# Create a histogram to compare weight between sexes. There is a fluctuation in the distribution that I wanted to investigate further by confirming that the differences are a result of the collection sites, hence 'fill = grid'
+
+ggplot(hares_juvenile, aes(x = weight))+
+  geom_histogram(binwidth = 65, aes(fill = grid))+
+  facet_wrap(~sex)
+
+# Create a qq plot to further investigate whether population follows normal distribution
+
+ggplot(hares_juvenile, aes(sample = weight)) +
+  geom_qq() +
+  facet_wrap(~sex)
+```
+- Based on the summary statistics, it seems like there's a strange gap in the middle of the males data around 700 grams. The data still appears to be close to normally distributed, though it might be worth investigating this further. The qq plot shows similar iregularities in the male popultaion the were concerning in the histogram. Additionally, all populations appear to deviate from normal distribution at the tails, though this is not abnormal for a normally distributed population in the wild. 
+
+```{r}
+# Create a table with summary statistics. kableExtra in a different code chunk to read into the knitted html document.
+
+hares_sex_summary <- hares_juvenile %>% 
+  select(sex, weight, year) %>% 
+  group_by(sex) %>% 
+  summarize(mean_weight = mean(weight, na.rm = TRUE),
+            sd = sd(weight, na.rm = TRUE),
+            sample_size = (n()),
+            variance = var(weight, na.rm = TRUE)
+            )
+  
+hares_sex_summary %>% 
+  kbl() %>% 
+  kable_styling()
+```
+
+

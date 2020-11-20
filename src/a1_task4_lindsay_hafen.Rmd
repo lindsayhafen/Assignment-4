@@ -1,0 +1,83 @@
+---
+title: "a1_task4_lindsay_hafen.Rmd"
+author: "Lindsay Hafen"
+date: "10/11/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(palmerpenguins)
+```
+
+## 1. View the data
+
+- Attach the tidyverse and palmerpenguins in the initial code chunk library
+- Use View funtion (Capital V) in **console**
+
+## 2. Create a table with species and year
+
+- Use dplyr::count to parse out columns species and year
+
+```{r}
+penguins %>% 
+  count(species, year)
+```
+
+## 3. Create a scatterplot of flipper length vs bill depth that includes each species
+
+- Select species, flipper length, and bill depth using dplyr::select function
+
+```{r}
+peng_filtered <- penguins %>% 
+  select(species, bill_depth_mm, flipper_length_mm)
+```
+
+## 4. Create a graph of bill depth vs flipper length in respect to species
+
+- Use ggplot to create a graph
+- Assign variables x = flipper length, y = bill depth
+
+```{r}
+ggplot(data = peng_filtered, aes(x = flipper_length_mm, y = bill_depth_mm, color = species))+
+  geom_point()+
+  labs(title = "Flipper Length vs Bill Depth for Palmer's Penguins (2007-2009) (HAFEN)")+
+  labs(x = "flipper length (mm)")+
+  labs(y = "bill depth (mm)")+
+  theme_dark()
+```
+
+## 5. Explore only gentoo 2008 data for flipper length vs body mass
+
+- Create a new data subset peng_gent
+- Use dplyr::select to parse out species, flipper length, body mass
+- Use dplyr::filter to select year = 2008, species = gentoo
+
+```{r}
+peng_gent <- penguins %>% 
+  select(species, flipper_length_mm, body_mass_g, year, sex) %>% 
+  filter(species == "Gentoo") %>% 
+  filter(year == 2008)
+```
+
+## 6. Graph flipper length vs body mass respective to sex for gentoo species in 2008
+
+- Use ggplot to create a scatterplot using peng_gent for data 
+- aes(x = flipper length, y = body mass, and color = sex)
+
+```{r}
+ggplot(data = peng_gent, aes(x = flipper_length_mm, y = body_mass_g, color = sex))+
+  geom_point()+
+  labs(title = "Flipper Length vs Body Mass Respective to Sex in Gentoo Palmer's Penguins (2008) (HAFEN)")+
+  labs(x = "flipper length (mm)")+
+  labs(y = "body mass (g)")+
+  theme_classic()+
+  theme(plot.title = element_text(size=11))
+```
+
+
+
+
+
+

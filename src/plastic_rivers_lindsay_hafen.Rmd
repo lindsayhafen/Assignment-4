@@ -1,0 +1,122 @@
+---
+title: "plastic_rivers_lindsay_hafen.Rmd"
+author: "Lindsay Hafen"
+date: "10/22/2020"
+output: html_document
+---
+
+```{r setup, echo=TRUE, error=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(janitor)
+library(here)
+```
+
+## 1. (a) Overview of exploration
+
+This is an exploration of plastic pollution that results from macro and microplastic transported by rivers around the world. In this exploration I compare the top 15 receiving seas that are impacted by microplastic pollution, and I compare the top 5 contributing rivers' total plastic contribution to the Gulf of Mexico. I will practice using functions such as summarize and mutate as well as data visualization techniques that optimize responsible communication. 
+
+#####(b) **Citation:**
+Schmidt C, Krauth T, Wagner S (2017). Export of plastic debris by rivers into the sea. Environ. Sci. Technol. v. 51 (21), p. 12246-12253. 
+
+
+## 2. (d) Read in the data & clean names
+
+- Read in data using here() because it is in the data folder within the R Project
+- Use janitor to change column names to lower_snake_case
+
+```{r}
+plastic_rivers <- read_csv(here("data", "plastic_rivers.csv" )) %>% 
+  clean_names()
+```
+
+## 3. Clean up data
+
+- Rename confusing columns using rename() function
+- I'm taking units out here for brevity and readability, but they will be reflected in the graph later.
+- MMPW stands for mismanaged plastic waste
+
+```{r}
+plastic_rivers_clean <- plastic_rivers %>% 
+  rename(mmpw_generation_per_capita = mmpw_generation_per_capita_kg_d_1,
+         microplastic_load_model_1 = microplastic_load_model_1_tons_y_1,
+         mmpw_catchment_generated = mmpw_generated_in_the_catchment_tons_y_1,
+         microplastic_load_model_2 = microplastic_load_model_2_tons_y_1,
+         macroplastic_load = macroplastic_load_tons_y_1)
+```
+
+## 4. Explore data
+
+- Use Model 2 to find total estimated annual microplastics for each receiving sea (Still in tonnes)
+- Group data by receiving sea (combine all numeric values to correspond with their receiving sea)
+- Use summarize to calculate total microplastics load across river catchments (that lead into receiving seas)
+- Isolate the top 15 most impacted seas
+- I will leave the East China Sea and the Yellow Sea separate because it seems that the original researchers may have recorded their data this way intentionally.
+
+```{r, message=FALSE}
+annual_microplastics <- plastic_rivers_clean %>% 
+  select(microplastic_load_model_2, receiving_sea) %>%
+  group_by(receiving_sea) %>% 
+  summarize(total_microplastics = sum(microplastic_load_model_2, na.rm = TRUE))
+
+top_15_impacted_seas <- annual_microplastics %>% 
+  slice_max(order_by = total_microplastics, n = 15)
+  
+```
+
+## 5. Graph of the top 15 impacted seas (microplastic tonnes/yr)
+
+- I will use a bar graph to compare the impacted sea and the amount of microplastic (in tonnes)
+- The data will be arranged in descending order with the most impacted sea at the top.
+- I have elected to place the sea names on the y axis for readability, but otherwise a y axis title is unnecessary. I have removed the y axis title using the theme() function
+
+```{r}
+ggplot(top_15_impacted_seas, 
+       aes(y = fct_reorder(receiving_sea, total_microplastics),
+           x = total_microplastics)) +
+  geom_bar(stat = "identity", fill = "darkcyan") +
+  labs(title = "Top 15 seas annually impacted by microplastics", x = "microplastics (tonnes per year)") +
+  theme_minimal() +
+  theme(axis.title.y = element_blank())
+```
+
+##### *fig(1)* 
+graph depicts top 15 seas impacted by microplastic particles (each <5mm) annually measured in estimated tonnes of plastic.
+
+## 6. Graph of the top 5 catchments for plastic pollution in the Gulf of Mexico
+
+- First I will need to organize the data starting from our cleaned plastics
+- dplyr::select to select for model 2 micro and macroplastics, rivers and receiving sea
+- dplyr::filter to select only catchments that have a receiving sea of the Gulf of Mexico (GoM)
+- Combine the micro and macroplastics values into one column
+- I'm removing the macroplastic_load and microplastic_load_model_2 columns for practice
+- use slice_max() with an n = 5 to isolate the top 5 catchment contributors to the GoM
+- Graph a bar graph that reflects the river catchments vs the tonnage of plastic into the gulf per year.
+
+```{r}
+top_5_catchments <- plastic_rivers_clean %>% 
+  select(river, receiving_sea, microplastic_load_model_2, macroplastic_load) %>% 
+  filter(receiving_sea == "Gulf of Mexico") %>% 
+  mutate(total_plastics = microplastic_load_model_2 + macroplastic_load) %>% 
+  select(- microplastic_load_model_2, - macroplastic_load) %>% 
+  slice_max(order_by = total_plastics, n = 5)
+
+ggplot(data = top_5_catchments, 
+       aes(y = fct_reorder(river, total_plastics), x = total_plastics)) +
+  geom_bar(stat = "identity", fill = "darkmagenta") +
+  labs(title = "Top five annual contributers of plastic to the Gulf of Mexico", x = "tonnes of plastic") +
+  theme_bw() +
+  theme(axis.title.y = element_blank())
+```
+
+##### *fig(2)* 
+This graph depicts the estimated tonnes of plastic that each of these top 5 contributor catchments contributes to the Gulf of Mexico annually.
+
+- The top 5 contributers to the greatest total plastic loads in the Gulf of Mexico are:
+1) Mississippi
+2) Grijalva, Usumacinta
+3) Rio Grande
+4) Tamesi, Panuco
+5) Trinity
+
+
